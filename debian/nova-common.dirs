@@ -12,3 +12,4 @@ var/lib/nova/keys
 var/lib/nova/networks
 var/lib/nova/tmp
 var/log/nova
+etc/oslo
