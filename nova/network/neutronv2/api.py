@@ -172,6 +172,17 @@ def _load_auth_plugin(conf):
                                 tenant_id=conf.neutron.admin_tenant_id,
                                 tenant_name=conf.neutron.admin_tenant_name)
 
+    if conf.neutron.auth_strategy in ('keystonev3', None):
+        from keystoneclient.auth.identity import v3 as v3_auth
+        return v3_auth.Password(auth_url=conf.neutron.admin_auth_url,
+                                username=conf.neutron.admin_username,
+                                user_id=conf.neutron.admin_user_id,
+                                password=conf.neutron.admin_password,
+                                user_domain_id='default',
+                                user_domain_name='Default',
+                                project_id=conf.neutron.admin_tenant_id,
+                                project_name=conf.neutron.admin_tenant_name)
+
     err_msg = _('Unknown auth strategy: %s') % conf.neutron.auth_strategy
     raise neutron_client_exc.Unauthorized(message=err_msg)
 
