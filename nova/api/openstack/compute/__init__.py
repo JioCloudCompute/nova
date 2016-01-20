@@ -32,6 +32,7 @@ from nova.api.openstack.compute import plugins
 from nova.api.openstack.compute import server_metadata
 from nova.api.openstack.compute import servers
 from nova.api.openstack.compute import versions
+from nova.api.openstack.compute import volumes
 
 allow_instance_snapshots_opt = cfg.BoolOpt('allow_instance_snapshots',
         default=True,
@@ -126,6 +127,14 @@ class APIRouter(nova.api.openstack.APIRouter):
                            controller=server_metadata_controller,
                            action='update_all',
                            conditions={"method": ['PUT']})
+
+        if init_only is None or 'volumes' in init_only:
+            self.resources['volumes'] = \
+                volumes.create_resource()
+            mapper.resource("volumes", "volumes",
+                            controller=self.resources['volumes'],
+                            collection={'detail': 'GET'},
+                            member={'action': 'PUT'})
 
 
 class APIRouterV21(nova.api.openstack.APIRouterV21):

@@ -28,6 +28,7 @@ from nova import exception
 from nova.i18n import _
 from nova import objects
 from nova import volume
+from nova.api.openstack.compute import volumes
 
 ALIAS = "os-volumes"
 authorize = extensions.os_compute_authorizer(ALIAS)
@@ -555,6 +556,12 @@ class Volumes(extensions.V3APIExtensionBase):
         res = extensions.ResourceExtension(
             'os-snapshots', SnapshotController(),
             collection_actions={'detail': 'GET'})
+        resources.append(res)
+
+        res = extensions.ResourceExtension(
+           'volumes', volumes.Controller(),
+           collection_actions={'detail': 'GET',
+                               'action': 'PUT'})
         resources.append(res)
 
         return resources
