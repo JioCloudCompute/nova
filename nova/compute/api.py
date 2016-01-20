@@ -716,7 +716,9 @@ class API(base.Base):
                     # TODO(mdbooth) Raise a more descriptive exception here.
                     # This is the exception which calling code expects, but
                     # it's potentially misleading to the user.
-                    raise exception.FlavorDiskTooSmall()
+                    msg=" Minimum size required for this image is %s GB."%(image_min_disk/units.Gi)
+                    raise exception.BlockDeviceSizeTooSmall(reason=msg)
+                    #raise exception.FlavorDiskTooSmall()
 
         # Target disk is a local disk whose size is taken from the flavor
         else:
