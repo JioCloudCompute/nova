@@ -1958,6 +1958,18 @@ class API(base.Base):
         #                 It is used only for osapi. not for ec2 api.
         #                 availability_zone isn't used by run_instance.
         self.compute_rpcapi.start_instance(context, instance)
+    def get_block_device_mapping_termination_flag(self, context, volume_id):
+        """ get the block device mapping delete_on_termination flag"""
+        volume=objects.BlockDeviceMapping.get_by_volume_id(context, volume_id)
+        return volume
+
+    def update_block_device_mapping_termination_flag(self, context, volume_id,delete_on_termination_flag):
+        """update the block device mapping delete_on_termination flag """
+        #check if bdm exists in DB. 
+        volume=objects.BlockDeviceMapping.get_by_volume_id(context, volume_id)
+        volume.delete_on_termination = delete_on_termination_flag
+        volume.save()
+        return volume
 
     def get(self, context, instance_id, want_objects=False,
             expected_attrs=None):
