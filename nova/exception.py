@@ -1244,6 +1244,9 @@ class FlavorMemoryTooSmall(NovaException):
 class FlavorDiskTooSmall(NovaException):
     msg_fmt = _("Flavor's disk is too small for requested image.")
 
+class BlockDeviceSizeTooSmall(NovaException):
+    msg_fmt = _("Root Block device is too small for requested image.%(reason)s")
+
 
 class InsufficientFreeMemory(NovaException):
     msg_fmt = _("Insufficient free memory on compute node to start %(uuid)s.")
