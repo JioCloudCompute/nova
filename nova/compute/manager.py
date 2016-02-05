@@ -35,7 +35,6 @@ import traceback
 import uuid
 
 from metricgenerator import publish
-from metricgenerator.logger import Logger
 
 from cinderclient import exceptions as cinder_exception
 import eventlet.event

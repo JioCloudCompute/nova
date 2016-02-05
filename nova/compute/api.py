@@ -77,7 +77,6 @@ from nova import utils
 from nova.virt import hardware
 from nova import volume
 from metricgenerator import publish
-from metricgenerator.logger import Logger
 
 LOG = logging.getLogger(__name__)
 
