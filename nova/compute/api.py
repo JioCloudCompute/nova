@@ -76,8 +76,12 @@ from nova import servicegroup
 from nova import utils
 from nova.virt import hardware
 from nova import volume
+from metricgenerator import publish
+from metricgenerator.logger import Logger
 
 LOG = logging.getLogger(__name__)
+
+publish = publish.Publish("nova-api", "/tmp/config.cfg")
 
 get_notifier = functools.partial(rpc.get_notifier, service='compute')
 wrap_exception = functools.partial(exception.wrap_exception,
@@ -1501,6 +1505,7 @@ class API(base.Base):
                 raise exception.InvalidFixedIpAndMaxCountRequest(reason=msg)
 
     @hooks.add_hook("create_instance")
+    @publish.ReportLatency("block_device_mapping", listOfKeys = [[],['request_id']])
     def create(self, context, instance_type,
                image_href, kernel_id=None, ramdisk_id=None,
                min_count=None, max_count=None,
@@ -1882,6 +1887,8 @@ class API(base.Base):
     @check_instance_cell
     @check_instance_state(vm_state=None, task_state=None,
                           must_have_launched=False)
+    @publish.ReportLatency("delete", listOfKeys =\
+                               [[],['request_id']])
     def delete(self, context, instance):
         """Terminate an instance."""
         LOG.debug("Going to try to terminate instance", instance=instance)
@@ -1967,7 +1974,7 @@ class API(base.Base):
 
     def update_block_device_mapping_termination_flag(self, context, volume_id,delete_on_termination_flag):
         """update the block device mapping delete_on_termination flag """
-        #check if bdm exists in DB. 
+        #check if bdm exists in DB.
         volume=objects.BlockDeviceMapping.get_by_volume_id(context, volume_id)
         volume.delete_on_termination = delete_on_termination_flag
         volume.save()

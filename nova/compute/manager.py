@@ -34,6 +34,9 @@ import time
 import traceback
 import uuid
 
+from metricgenerator import publish
+from metricgenerator.logger import Logger
+
 from cinderclient import exceptions as cinder_exception
 import eventlet.event
 from eventlet import greenthread
@@ -94,6 +97,7 @@ from nova.virt import virtapi
 from nova import volume
 from nova.volume import encryptors
 
+publish = publish.Publish("nova-compute", "/tmp/config1.cfg")
 
 compute_opts = [
     cfg.StrOpt('console_host',
@@ -2312,6 +2316,7 @@ class ComputeManager(manager.Manager):
             self._set_instance_error_state(context, instance)
             return build_results.FAILED
 
+    @publish.ReportLatency("spawning", listOfKeys = [[],['request_id']])
     def _build_and_run_instance(self, context, instance, image, injected_files,
             admin_password, requested_networks, security_groups,
             block_device_mapping, node, limits, filter_properties):
@@ -6985,6 +6990,7 @@ class _ComputeV4Proxy(object):
     def external_instance_event(self, ctxt, instances, events):
         return self.manager.external_instance_event(ctxt, instances, events)
 
+    @publish.ReportLatency("building", listOfKeys = [[],['request_id']])
     def build_and_run_instance(self, ctxt, instance, image, request_spec,
                                filter_properties, admin_password=None,
                                injected_files=None, requested_networks=None,
