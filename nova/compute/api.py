@@ -80,8 +80,6 @@ from metricgenerator import publish
 
 LOG = logging.getLogger(__name__)
 
-publish = publish.Publish("nova-api", "/tmp/config.cfg")
-
 get_notifier = functools.partial(rpc.get_notifier, service='compute')
 wrap_exception = functools.partial(exception.wrap_exception,
                                    get_notifier=get_notifier)
@@ -122,6 +120,9 @@ compute_opts = [
                     'in a local image being created on the hypervisor node. '
                     'Setting this to 0 means nova will allow only '
                     'boot from volume. A negative number means unlimited.'),
+    cfg.StrOpt('monitoring_config',
+               default='/tmp/config.cfg',
+               help='Config for details on emitting metrics')
 ]
 
 ephemeral_storage_encryption_group = cfg.OptGroup(
@@ -153,6 +154,8 @@ CONF.register_opts(ephemeral_storage_encryption_opts,
 CONF.import_opt('compute_topic', 'nova.compute.rpcapi')
 CONF.import_opt('enable', 'nova.cells.opts', group='cells')
 CONF.import_opt('default_ephemeral_format', 'nova.virt.driver')
+
+publish = publish.Publish("nova-api", CONF.monitoring_config)
 
 MAX_USERDATA_SIZE = 65535
 RO_SECURITY_GROUPS = ['default']
