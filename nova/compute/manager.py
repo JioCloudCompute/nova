@@ -96,8 +96,6 @@ from nova.virt import virtapi
 from nova import volume
 from nova.volume import encryptors
 
-publish = publish.Publish("nova-compute", "/tmp/config1.cfg")
-
 compute_opts = [
     cfg.StrOpt('console_host',
                default=socket.gethostname(),
@@ -133,7 +131,10 @@ compute_opts = [
     cfg.IntOpt('block_device_allocate_retries',
                default=60,
                help='Number of times to retry block device'
-                    ' allocation on failures')
+                    ' allocation on failures'),
+    cfg.StrOpt('monitoring_config',
+               default='/tmp/config.cfg',
+               help='Config for details on emitting metrics')
     ]
 
 interval_opts = [
@@ -261,6 +262,7 @@ get_notifier = functools.partial(rpc.get_notifier, service='compute')
 wrap_exception = functools.partial(exception.wrap_exception,
                                    get_notifier=get_notifier)
 
+publish = publish.Publish("nova-compute", CONF.monitoring_config)
 
 @utils.expects_func_args('migration')
 def errors_out_migration(function):
