@@ -67,6 +67,7 @@ CREATE_EXCEPTIONS = {
     exception.ConfigDriveInvalidValue: exc.HTTPBadRequest,
     exception.ImageNotActive: exc.HTTPBadRequest,
     exception.FlavorDiskTooSmall: exc.HTTPBadRequest,
+    exception.BlockDeviceSizeTooSmall: exc.HTTPBadRequest,
     exception.FlavorMemoryTooSmall: exc.HTTPBadRequest,
     exception.NetworkNotFound: exc.HTTPBadRequest,
     exception.PortNotFound: exc.HTTPBadRequest,

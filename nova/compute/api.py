@@ -76,6 +76,7 @@ from nova import servicegroup
 from nova import utils
 from nova.virt import hardware
 from nova import volume
+from metricgenerator import publish
 
 LOG = logging.getLogger(__name__)
 
@@ -119,6 +120,9 @@ compute_opts = [
                     'in a local image being created on the hypervisor node. '
                     'Setting this to 0 means nova will allow only '
                     'boot from volume. A negative number means unlimited.'),
+    cfg.StrOpt('monitoring_config',
+               default='/tmp/config.cfg',
+               help='Config for details on emitting metrics')
 ]
 
 ephemeral_storage_encryption_group = cfg.OptGroup(
@@ -150,6 +154,8 @@ CONF.register_opts(ephemeral_storage_encryption_opts,
 CONF.import_opt('compute_topic', 'nova.compute.rpcapi')
 CONF.import_opt('enable', 'nova.cells.opts', group='cells')
 CONF.import_opt('default_ephemeral_format', 'nova.virt.driver')
+
+publish = publish.Publish("nova-api", CONF.monitoring_config)
 
 MAX_USERDATA_SIZE = 65535
 RO_SECURITY_GROUPS = ['default']
@@ -716,7 +722,9 @@ class API(base.Base):
                     # TODO(mdbooth) Raise a more descriptive exception here.
                     # This is the exception which calling code expects, but
                     # it's potentially misleading to the user.
-                    raise exception.FlavorDiskTooSmall()
+                    msg=" Minimum size required for this image is %s GB."%(image_min_disk/units.Gi)
+                    raise exception.BlockDeviceSizeTooSmall(reason=msg)
+                    #raise exception.FlavorDiskTooSmall()
 
         # Target disk is a local disk whose size is taken from the flavor
         else:
@@ -1519,6 +1527,7 @@ class API(base.Base):
                 raise exception.InvalidFixedIpAndMaxCountRequest(reason=msg)
 
     @hooks.add_hook("create_instance")
+    @publish.ReportLatency("block_device_mapping", listOfKeys = [[],['request_id']])
     def create(self, context, instance_type,
                image_href, kernel_id=None, ramdisk_id=None,
                min_count=None, max_count=None,
@@ -1900,6 +1909,8 @@ class API(base.Base):
     @check_instance_cell
     @check_instance_state(vm_state=None, task_state=None,
                           must_have_launched=False)
+    @publish.ReportLatency("delete", listOfKeys =\
+                               [[],['request_id']])
     def delete(self, context, instance):
         """Terminate an instance."""
         LOG.debug("Going to try to terminate instance", instance=instance)
@@ -1978,6 +1989,18 @@ class API(base.Base):
         #                 It is used only for osapi. not for ec2 api.
         #                 availability_zone isn't used by run_instance.
         self.compute_rpcapi.start_instance(context, instance)
+    def get_block_device_mapping_termination_flag(self, context, volume_id):
+        """ get the block device mapping delete_on_termination flag"""
+        volume=objects.BlockDeviceMapping.get_by_volume_id(context, volume_id)
+        return volume
+
+    def update_block_device_mapping_termination_flag(self, context, volume_id,delete_on_termination_flag):
+        """update the block device mapping delete_on_termination flag """
+        #check if bdm exists in DB.
+        volume=objects.BlockDeviceMapping.get_by_volume_id(context, volume_id)
+        volume.delete_on_termination = delete_on_termination_flag
+        volume.save()
+        return volume
 
     def get(self, context, instance_id, want_objects=False,
             expected_attrs=None):
